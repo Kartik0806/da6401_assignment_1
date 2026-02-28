@@ -7,7 +7,7 @@ import numpy as np
 from src.ann import Module
 from src.ann import Parameter
 
-## grad is incoming gradient from the next layer, i.e. dL/dz
+## incoming_grad is incoming gradient from the next layer, i.e. dL/dz
 class ReLU(Module):
     def __init__(self):
         super().__init__()
@@ -17,9 +17,9 @@ class ReLU(Module):
         self.input = x
         self.output = np.maximum(0, x)
         return self.output
-    def backward(self, grad):
+    def backward(self, incoming_grad):
         local_grad = np.where(self.input > 0, 1, 0)
-        return grad * local_grad
+        return incoming_grad * local_grad
     def __repr__(self):
         return "ReLU()"
 
@@ -33,9 +33,9 @@ class Sigmoid(Module):
         self.output = 1 / (1 + np.exp(-x))
         return self.output
 
-    def backward(self, grad):
+    def backward(self, incoming_grad):
         local_grad = self.output * (1 - self.output)
-        return grad * local_grad
+        return incoming_grad * local_grad
     def __repr__(self):
         return "Sigmoid()"
 
@@ -50,9 +50,20 @@ class Tanh(Module):
         self.output = np.tanh(x)
         return self.output
     
-    def backward(self, grad):
+    def backward(self, incoming_grad):
         local_grad = 1 - self.output**2
-        return grad * local_grad
+        return incoming_grad * local_grad
     
     def __repr__(self):
         return "Tanh()"
+
+acts ={
+    "relu": ReLU,
+    "sigmoid": Sigmoid,
+    "tanh": Tanh,
+}
+def get_activation_fn(act_name: str):
+    return acts[act_name]()
+
+
+        

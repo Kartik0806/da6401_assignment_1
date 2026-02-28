@@ -13,8 +13,8 @@ class Parameter:
 
 class Module:
     def __init__(self):
-        self.weights = None 
-        self.biases = None  
+        self.weight = None
+        self.bias = None
 
     def forward(self, x: np.ndarray):
         raise NotImplementedError
@@ -23,18 +23,18 @@ class Module:
         raise NotImplementedError
     
     def get_params(self):
-        if self.weights is None or self.biases is None: ## For activation layers
+        if self.weight is None or self.bias is None: ## For activation layers
             raise ValueError("Parameters not initialized")
-        return {"weights": self.weights, "biases": self.biases}
+        return {"weight": self.weight, "biase": self.bias}
     
     def set_params(self, params: dict):
-        if self.weights is None or self.biases is None: ## For activation layers
+        if self.weight is None or self.bias is None: ## For activation layers
             raise ValueError("Parameters not initialized")
-        self.weights = params["weights"]
-        self.biases = params["biases"]
+        self.weight = params["weight"]
+        self.bias = params["biase"]
     
     def zero_grad(self):
-        if self.weights is None or self.biases is None: ## For activation layers
+        if self.weight is None or self.bias is None: ## For activation layers
             return
-        self.weights.grad = np.zeros_like(self.weights.value)
-        self.biases.grad = np.zeros_like(self.biases.value)
+        self.weight.grad = np.zeros_like(self.weight.value)
+        self.bias.grad = np.zeros_like(self.bias.value)
