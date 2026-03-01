@@ -25,13 +25,13 @@ class Module:
     def get_params(self):
         if self.weight is None or self.bias is None: ## For activation layers
             raise ValueError("Parameters not initialized")
-        return {"weight": self.weight, "biase": self.bias}
+        return {"weight": self.weight, "bias": self.bias}
     
     def set_params(self, params: dict):
         if self.weight is None or self.bias is None: ## For activation layers
             raise ValueError("Parameters not initialized")
         self.weight = params["weight"]
-        self.bias = params["biase"]
+        self.bias = params["bias"]
     
     def zero_grad(self):
         if self.weight is None or self.bias is None: ## For activation layers

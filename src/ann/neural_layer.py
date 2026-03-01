@@ -10,10 +10,18 @@ from src.ann.activations import ReLU
 from src.ann.objective_functions import CrossEntropy
 
 class NeuralLayer(Module):
-    def __init__(self, in_features: int, out_features: int):
+    def __init__(self, in_features: int, out_features: int, init: str = "xavier"):
         super().__init__()
         
-        self.weight = Parameter(np.random.randn(in_features, out_features).astype(np.float64))
+        if init == "xavier":
+            self.weight = Parameter(np.random.randn(in_features, out_features) * np.sqrt(2.0 / in_features))
+        elif init == "zero":
+            self.weight = Parameter(np.zeros((in_features, out_features)))
+        elif init == "random":
+            self.weight = Parameter(np.random.randn(in_features, out_features))
+        else:
+            raise ValueError(f"Invalid weight initialization method: {init}")
+
         self.bias = Parameter(np.zeros((1,out_features,)).astype(np.float64))
         
         self.in_features = in_features

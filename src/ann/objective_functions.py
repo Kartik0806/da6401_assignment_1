@@ -41,7 +41,7 @@ class CrossEntropy(Module):
         self.prob = softmax(logits)
         output = np.mean(-np.log(self.prob[np.arange(self.prob.shape[0]), y_true] + 1e-12))
         
-        return output
+        return output 
     
     def backward(self, incoming_grad: np.ndarray = 1):
 
