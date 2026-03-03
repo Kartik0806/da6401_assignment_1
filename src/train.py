@@ -5,6 +5,7 @@ import numpy as np
 import wandb
 from src.ann.neural_network import NeuralNetwork
 from src.utils.data_loader import load_dataset
+from src.utils.analyze_gradients import analyze_gradients, analyze_activations
 import dotenv
 dotenv.load_dotenv()
 
@@ -125,11 +126,18 @@ def parse_arguments():
         help="Weights & Biases project name",
     )
     parser.add_argument(
+        "--run_name",
+        type=str,
+        default=None,
+        help="Run name for W&B",
+    )
+    parser.add_argument(
         "--model_save_path",
         type=str,
         default="model.npy",
         help="Relative path to save trained model weights (.npy)",
     )
+
 
     args = parser.parse_args()
 
@@ -167,7 +175,6 @@ def main():
     args.update({"input_dim": 784, "num_classes": 10})
     model = NeuralNetwork(args)
     print(model)
-    # model.build()
     # return
 
     one_hot = args["loss_type"] != "cross_entropy"
@@ -179,8 +186,11 @@ def main():
     wandb_run = None 
     import wandb
     wandb.login(key=WANDB_API_KEY)
+
     if args["wandb_project"]:
-        wandb_run = wandb.init(project=args["wandb_project"], config=args)
+        print(args["wandb_project"])
+        print(args["run_name"])
+        wandb_run = wandb.init(project=args["wandb_project"], config=args, name=args["run_name"])
 
     model = NeuralNetwork(args)
     history = model.train(
@@ -194,6 +204,7 @@ def main():
     )
 
     val_metrics = model.evaluate(X_val, y_val)
+
     test_metrics = model.evaluate(X_test, y_test)
     print("Validation metrics:", val_metrics)
     print("Test metrics:", test_metrics)
@@ -227,6 +238,18 @@ def main():
     print(f"Validation accuracy: {val_metrics['accuracy']:.4f}")
     print(f"Test accuracy: {test_metrics['accuracy']:.4f}")
 
+    weights = model.get_weights()       
+    np.save(args["model_save_path"], weights, allow_pickle=True)
+
+    loaded_weights = np.load(args["model_save_path"], allow_pickle=True)
+    model.set_weights(loaded_weights)
+
+    loaded_metrics = model.evaluate(X_test, y_test)
+    print("Loaded model metrics:", loaded_metrics)
+
+    analyze_gradients(model)
+    # analyze_weights(model, [0, 1, 2])
+    analyze_activations(model, X_test)
 
 if __name__ == "__main__":
     main()

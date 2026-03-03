@@ -11,6 +11,7 @@ def load_dataset(
     seed: int = 42,
     val_size: int = 10000,
     one_hot_labels: bool = False,
+    flatten: bool = True,
 ):
 
     name = name.lower().strip()
@@ -22,9 +23,9 @@ def load_dataset(
         raise ValueError("dataset must be 'mnist' or 'fashion_mnist'")
 
     # Normalize + flatten
-    
-    Xtr = (Xtr.astype(np.float64) / 255.0).reshape(Xtr.shape[0], -1)
-    Xte = (Xte.astype(np.float64) / 255.0).reshape(Xte.shape[0], -1)
+    if flatten:
+        Xtr = (Xtr.astype(np.float64) / 255.0).reshape(Xtr.shape[0], -1)
+        Xte = (Xte.astype(np.float64) / 255.0).reshape(Xte.shape[0], -1)
     ytr = ytr.astype(int)
     yte = yte.astype(int)
 

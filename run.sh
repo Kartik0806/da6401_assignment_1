@@ -1,14 +1,15 @@
 python -m src.train \
 -d mnist \
--e 5 \
+-e 10 \
 -b 64 \
--l cross_entropy \
--o sgd \
+-l mse \
+-o momentum \
 -lr 0.1 \
 -wd 0.01 \
--nhl 2 \
--sz 128 128 \
--a sigmoid sigmoid \
--w_i xavier xavier \
+-nhl 3 \
+-sz 128 64 32 \
+-a relu relu relu \
+-w_i xavier xavier xavier \
 --wandb_project test \
---model_save_path models/test_model.npy
+--model_save_path models/test_model.npy \
+--run_name momentum

@@ -14,12 +14,15 @@ class MSE(Module):
     def forward(self, logits: np.ndarray, y_true: np.ndarray):
         self.y_true = y_true
         self.logits = logits
-        self.output = np.mean((y_true - logits)**2) 
+        self.prob = softmax(logits)
+        self.output = np.mean((y_true - self.prob)**2) 
         return self.output
     
     def backward(self, incoming_grad: np.ndarray = 1):
-        local_grad = 2 * (self.logits - self.y_true) / self.logits.shape[0] ## (dL/dz)  (B, 1)
-        return incoming_grad * local_grad ## (1, 1) * (B, 1) -> (B, 1) 
+        dl_dp = 2 * (self.prob - self.y_true) / (self.prob.shape[0] * self.prob.shape[1]) ## (dL/dp)  (B, C)
+        dot = np.sum(dl_dp * self.prob, axis=1, keepdims=True)  # (B, 1)
+        dL_dz = self.prob * (dl_dp - dot)  # (B, C)
+        return incoming_grad * dL_dz ## (1, 1) * (B, C) -> (B, C) 
 
     def __repr__(self):
         return "MSE()"

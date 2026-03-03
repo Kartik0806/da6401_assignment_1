@@ -70,19 +70,23 @@ class NeuralNetwork:
         grad = self.loss.backward()
         # grad_W_list.append(self.layers[-1].grad_w)
         # grad_b_list.append(self.layers[-1].grad_b)
+        
         for layer in self.layers[::-1]:
             grad = layer.backward(grad)
             if isinstance(layer, NeuralLayer):
                 grad_W_list.append(layer.grad_w)
                 grad_b_list.append(layer.grad_b)
-        
-        return loss
         # create explicit object arrays to avoid numpy trying to broadcast shapes
-        # self.grad_W = np.empty(len(grad_W_list), dtype=object)
-        # self.grad_b = np.empty(len(grad_b_list), dtype=object)
-        # for i, (gw, gb) in enumerate(zip(grad_W_list, grad_b_list)):
-        #     self.grad_W[i] = gw
-        #     self.grad_b[i] = gb
+
+        if len(grad_W_list) < 50:
+            self.grad_W = np.empty(len(grad_W_list), dtype=object)
+            self.grad_b = np.empty(len(grad_b_list), dtype=object)
+            for i, (gw, gb) in enumerate(zip(grad_W_list, grad_b_list)):
+                self.grad_W[i] = gw
+                self.grad_b[i] = gb
+        
+        return loss, self.grad_W, self.grad_b
+
 
         # print("Shape of grad_Ws:", self.grad_W.shape, self.grad_W[1].shape)
         # print("Shape of grad_bs:", self.grad_b.shape, self.grad_b[1].shape)
@@ -115,13 +119,15 @@ class NeuralNetwork:
                     layer.zero_grad()
                 
                 logits = self.forward(X_batch)
-                loss = self.backward(y_batch, logits)
+                loss, grad_W, grad_b = self.backward(y_batch, logits)
                 self.update_weights()
                 step += 1
                 running_loss += loss
                 
                 if wandb_run is not None:
                     wandb_run.log({"train/step_loss": loss, "batch_step": step})  
+                    wandb_run.log({"train/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
+                    wandb_run.log({"train/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
             
 
             train_metrics = self.evaluate(X_train, y_train)
@@ -150,18 +156,20 @@ class NeuralNetwork:
     def get_weights(self):
         d = {}
         for i, layer in enumerate(self.layers):
-            d[f"W{i}"] = layer.W.copy()
-            d[f"b{i}"] = layer.b.copy()
+            if isinstance(layer, NeuralLayer):
+                d[f"W{i}"] = layer.weight.value.copy()
+                d[f"b{i}"] = layer.bias.value.copy()
         return d
 
     def set_weights(self, weight_dict):
         for i, layer in enumerate(self.layers):
-            w_key = f"W{i}"
-            b_key = f"b{i}"
-            if w_key in weight_dict:
-                layer.W = weight_dict[w_key].copy()
-            if b_key in weight_dict:
-                layer.b = weight_dict[b_key].copy()
+            if isinstance(layer, NeuralLayer):
+                w_key = f"W{i}"
+                b_key = f"b{i}"
+                if w_key in weight_dict:
+                    layer.weight.value = weight_dict[w_key].copy()
+                if b_key in weight_dict:
+                    layer.bias.value = weight_dict[b_key].copy()
     
     def __repr__(self):
         return "\n".join([str(layer) for layer in self.layers])

@@ -15,7 +15,7 @@ class NeuralLayer(Module):
         
         if init == "xavier":
             self.weight = Parameter(np.random.randn(in_features, out_features) * np.sqrt(2.0 / in_features))
-        elif init == "zero":
+        elif init == "zeros":
             self.weight = Parameter(np.zeros((in_features, out_features)))
         elif init == "random":
             self.weight = Parameter(np.random.randn(in_features, out_features))

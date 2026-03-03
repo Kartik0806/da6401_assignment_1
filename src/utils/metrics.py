@@ -2,9 +2,15 @@ import numpy as np
 
 def accuracy_score(y_true, logits):
     y_pred = np.argmax(logits, axis=1)
+
+    if y_true.ndim == 2:
+        y_true = np.argmax(y_true, axis=1)
     return np.mean(y_true == y_pred)
 
 def precision_score(y_true, logits):
+
+    if y_true.ndim == 2:
+        y_true = np.argmax(y_true, axis=1)
 
     num_classes = np.max(y_true) + 1
     precision = np.zeros(num_classes)
@@ -19,6 +25,9 @@ def precision_score(y_true, logits):
     return np.mean(precision)
 
 def recall_score(y_true, logits):
+    if y_true.ndim == 2:
+        y_true = np.argmax(y_true, axis=1)
+
     num_classes = np.max(y_true) + 1
     recall = np.zeros(num_classes)
 
@@ -32,6 +41,9 @@ def recall_score(y_true, logits):
     return np.mean(recall)
 
 def f1_score(y_true, logits):
+    if y_true.ndim == 2:
+        y_true = np.argmax(y_true, axis=1)
+
     precision = precision_score(y_true, logits)
     recall = recall_score(y_true, logits)
 
