@@ -218,7 +218,6 @@ def main():
                 "test/accuracy": test_metrics["accuracy"],
             }
         )
-        wandb_run.finish()
 
     # save_path = args.model_save_path
     # if os.path.isabs(save_path):
@@ -247,9 +246,11 @@ def main():
     loaded_metrics = model.evaluate(X_test, y_test)
     print("Loaded model metrics:", loaded_metrics)
 
-    analyze_gradients(model)
+    # analyze_gradients(model)
     # analyze_weights(model, [0, 1, 2])
-    analyze_activations(model, X_test)
+    # analyze_activations(model, X_test, wandb_run=wandb_run)
+
+    wandb_run.finish()
 
 if __name__ == "__main__":
     main()

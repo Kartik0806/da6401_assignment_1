@@ -64,7 +64,6 @@ def main(seed: int = 42):
         table.add_data(class_id, class_name, *images)
 
     run.log({"class_distribution": table})
-    print(f"✅ W&B Table logged. View at: {run.url}")
     run.finish()
 
 
