@@ -4,8 +4,8 @@ Implements: ReLU, Sigmoid, Tanh, Softmax
 """
 
 import numpy as np
-from src.ann import Module
-from src.ann import Parameter
+from ann import Module
+from ann import Parameter
 
 ## incoming_grad is incoming gradient from the next layer, i.e. dL/dz
 class ReLU(Module):

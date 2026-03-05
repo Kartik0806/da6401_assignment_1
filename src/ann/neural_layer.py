@@ -4,10 +4,10 @@ Handles weight initialization, forward pass, and gradient computation
 """
 
 import numpy as np
-from src.ann import Parameter
-from src.ann import Module
-from src.ann.activations import ReLU
-from src.ann.objective_functions import CrossEntropy
+from ann import Parameter
+from ann import Module
+from ann.activations import ReLU
+from ann.objective_functions import CrossEntropy
 
 class NeuralLayer(Module):
     def __init__(self, in_features: int, out_features: int, init: str = "xavier"):

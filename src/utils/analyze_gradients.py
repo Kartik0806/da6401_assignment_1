@@ -1,6 +1,6 @@
-from src.ann.neural_network import NeuralNetwork
+from ann.neural_network import NeuralNetwork
 import matplotlib.pyplot as plt
-from src.ann.neural_layer import NeuralLayer
+from ann.neural_layer import NeuralLayer
 import numpy as np
 import wandb
 

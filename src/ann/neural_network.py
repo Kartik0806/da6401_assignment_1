@@ -3,31 +3,34 @@ Main Neural Network Model class
 Handles forward and backward propagation loops
 """
 import numpy as np
-from src.ann.activations import get_activation_fn
-from src.ann.neural_layer import NeuralLayer
-from src.ann.objective_functions import get_loss
-from src.ann.optimizers import get_optimizer
-from src.utils.metrics import accuracy_score, precision_score, recall_score, f1_score
+from ann.activations import get_activation_fn
+from ann.neural_layer import NeuralLayer
+from ann.objective_functions import get_loss
+from ann.optimizers import get_optimizer
+from utils.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 class NeuralNetwork:
     """
     Main model class that orchestrates the neural network training and inference.
     """
 
-    def __init__(self, args: dict):
-        self.input_dim = args["input_dim"]
-        self.hidden_sizes = args["hidden_sizes"]
-        self.activations = args["activations"]
-        self.num_classes = args["num_classes"]
-        self.loss_type = args["loss_type"]
-        self.optimizer_type = args["optimizer_type"]
-        self.learning_rate = args["learning_rate"]
-        self.weight_decay = args["weight_decay"]
-        self.weight_init = args["weight_init"]
-        self.layers = []
+    def __init__(self, args):
 
+
+        self.hidden_sizes = args.hidden_sizes
+        
+        self.activations = args.activation
+        self.loss_type = args.loss
+        self.optimizer_type = args.optimizer
+        self.learning_rate = args.learning_rate
+        self.weight_decay = args.weight_decay
+        self.weight_init = args.weight_init
+        self.input_dim = 784
+        self.num_classes = 10
+        self.layers = []
         self.build()
 
+    
     def build(self):
 
         ## building model
@@ -51,6 +54,7 @@ class NeuralNetwork:
         X is shape (b, D_in) and output is shape (b, D_out).
         b is batch size, D_in is input dimension, D_out is output dimension.
         """
+
         for layer in self.layers:
             X = layer.forward(X)
         return X
@@ -78,12 +82,11 @@ class NeuralNetwork:
                 grad_b_list.append(layer.grad_b)
         # create explicit object arrays to avoid numpy trying to broadcast shapes
 
-        if len(grad_W_list) < 50:
-            self.grad_W = np.empty(len(grad_W_list), dtype=object)
-            self.grad_b = np.empty(len(grad_b_list), dtype=object)
-            for i, (gw, gb) in enumerate(zip(grad_W_list, grad_b_list)):
-                self.grad_W[i] = gw
-                self.grad_b[i] = gb
+        self.grad_W = np.empty(len(grad_W_list), dtype=object)
+        self.grad_b = np.empty(len(grad_b_list), dtype=object)
+        for i, (gw, gb) in enumerate(zip(grad_W_list, grad_b_list)):
+            self.grad_W[i] = gw
+            self.grad_b[i] = gb
         
         return loss, self.grad_W, self.grad_b
 
@@ -99,6 +102,7 @@ class NeuralNetwork:
 
     def train(self, X_train, y_train, X_val, y_val, epochs=1, batch_size=32, wandb_run=None):
 
+        self.num_classes = len(np.unique(y_train))
         if wandb_run is not None:
             wandb_run.define_metric("train/step_loss", step_metric="batch_step")
             wandb_run.define_metric("train/epoch_loss", step_metric="epoch")
@@ -156,14 +160,14 @@ class NeuralNetwork:
     def get_weights(self):
         d = {}
         for i, layer in enumerate(self.layers):
-            if isinstance(layer, NeuralLayer):
+            if layer.weight is not None and layer.bias is not None:
                 d[f"W{i}"] = layer.weight.value.copy()
                 d[f"b{i}"] = layer.bias.value.copy()
         return d
 
     def set_weights(self, weight_dict):
         for i, layer in enumerate(self.layers):
-            if isinstance(layer, NeuralLayer):
+            if layer.weight is not None and layer.bias is not None:
                 w_key = f"W{i}"
                 b_key = f"b{i}"
                 if w_key in weight_dict:

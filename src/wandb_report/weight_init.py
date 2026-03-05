@@ -14,7 +14,7 @@ CMD1 = """python -m src.train \
 -w_i xavier xavier \
 --wandb_project wandb_report \
 --model_save_path models/test_model.npy \
---run_name Q-9: xavier_init
+--run_name "Q-9: xavier_init"
 """
 CMD2 = """python -m src.train \
 -d mnist \
@@ -30,10 +30,10 @@ CMD2 = """python -m src.train \
 -w_i zeros zeros \
 --wandb_project wandb_report \
 --model_save_path models/test_model.npy \
---run_name Q-9: zeros_init
+--run_name "Q-9: zeros_init"
 """
 
-# os.system(CMD1)
+os.system(CMD1)
 os.system(CMD2)
 
 

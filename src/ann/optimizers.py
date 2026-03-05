@@ -3,7 +3,7 @@ Optimization Algorithms
 Implements: SGD, Momentum, Adam, Nadam, etc.
 """
 import numpy as np
-from src.ann import Parameter
+from ann import Parameter
 # from src.ann.neural_network import NeuralNetwork
 ## Access each layer's parameters and grads using get_params() and update them
 class SGD:

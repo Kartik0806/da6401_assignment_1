@@ -3,11 +3,12 @@ import os
 import json
 import numpy as np
 import wandb
-from src.ann.neural_network import NeuralNetwork
-from src.utils.data_loader import load_dataset
-from src.utils.analyze_gradients import analyze_gradients, analyze_activations
-import dotenv
-dotenv.load_dotenv()
+from ann.neural_network import NeuralNetwork
+from utils.data_loader import load_dataset
+from utils.analyze_gradients import analyze_gradients, analyze_activations
+from utils.metrics import get_confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+# import dotenv
+# dotenv.load_dotenv()
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
@@ -41,16 +42,17 @@ def parse_arguments():
         choices=["mnist", "fashion_mnist"],
         required=True,
         help="Dataset to use",
+        default="mnist"
     )
     parser.add_argument(
-        "-e", "--epochs", type=int, required=True, help="Number of training epochs"
+        "-e", "--epochs", type=int, required=True, help="Number of training epochs", default=10
     )
     parser.add_argument(
-        "-b", "--batch_size", type=int, required=True, help="Mini-batch size"
+        "-b", "--batch_size", type=int, required=True, help="Mini-batch size", default=64
     )
     parser.add_argument(
         "-l",
-        "--loss_type",
+        "--loss",
         type=str,
         choices=["cross_entropy", "mean_squared_error", "mse"],
         default="cross_entropy",
@@ -58,7 +60,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "-o",
-        "--optimizer_type",
+        "--optimizer",
         type=str,
         choices=["sgd", "momentum", "nag", "rmsprop", "adam", "nadam"],
         default="sgd",
@@ -70,6 +72,7 @@ def parse_arguments():
         type=float,
         required=True,
         help="Learning rate for optimizer",
+        default=0.01
     )
     parser.add_argument(
         "-wd",
@@ -84,6 +87,7 @@ def parse_arguments():
         type=int,
         required=True,
         help="Number of hidden layers",
+        default=1
     )
     parser.add_argument(
         "-sz",
@@ -92,10 +96,11 @@ def parse_arguments():
         type=int,
         required=True,
         help="Number of neurons in each hidden layer (one value per layer)",
+        default=[128]
     )
     parser.add_argument(
         "-a",
-        "--activations",
+        "--activation",
         nargs="+",
         type=str,
         choices=["relu", "sigmoid", "tanh"],
@@ -120,6 +125,7 @@ def parse_arguments():
         ),
     )
     parser.add_argument(
+        "-w_p",
         "--wandb_project",
         type=str,
         default=None,
@@ -140,6 +146,7 @@ def parse_arguments():
 
 
     args = parser.parse_args()
+
 
     # if len(args.hidden_size) != args.num_layers: 
 
@@ -170,34 +177,41 @@ def main():
     Main training function.
     """
     args = parse_arguments() 
-    args = vars(args)
-    # print(args)
-    args.update({"input_dim": 784, "num_classes": 10})
+    args.input_dim = 784
+    args.num_classes = 10
     model = NeuralNetwork(args)
-    print(model)
+    # print(args)
+    # args.update({"input_dim": 784, "num_classes": 10})
+    # model = NeuralNetwork(args)
+    # print(model)
     # return
-
-    one_hot = args["loss_type"] != "cross_entropy"
+    
+ 
+    one_hot = args.loss != "cross_entropy"
 
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(
-        args["dataset"], one_hot_labels=one_hot
+        args.dataset, one_hot_labels=one_hot
     ) 
 
     wandb_run = None 
     import wandb
-    wandb.login(key=WANDB_API_KEY)
 
-    if args["wandb_project"]:
-        print(args["wandb_project"])
-        print(args["run_name"])
-        wandb_run = wandb.init(project=args["wandb_project"], config=args, name=args["run_name"])
+    if WANDB_API_KEY is not None:
+        wandb.login(key=WANDB_API_KEY)
 
-    model = NeuralNetwork(args)
+    # if args.wandb_project:
+    #     print(args.wandb_project)
+    #     print(args.run_name)
+    #     wandb_run = None
+        # wandb_run = wandb.init(project=args["wandb_project"], config=args, name=args["run_name"])
+
+    # model = NeuralNetwork(args)
+
     history = model.train(
         X_train,
         y_train,
-        epochs=args["epochs"],
-        batch_size=args["batch_size"],
+        epochs=args.epochs,
+        batch_size=args.batch_size,
         X_val=X_val,
         y_val=y_val,
         wandb_run=wandb_run,
@@ -218,29 +232,21 @@ def main():
                 "test/accuracy": test_metrics["accuracy"],
             }
         )
-
-    # save_path = args.model_save_path
-    # if os.path.isabs(save_path):
-    #     raise ValueError("model_save_path must be a relative path")
-
-    # weights = {
-    #     "layers": [{"W": layer.W, "b": layer.b} for layer in model.layers],
-    #     "config": vars(args),
-    #     "history": history, 
-    # }
-    # np.save(save_path, weights, allow_pickle=True)
-
-    # with open("best_config.json", "w") as f:
-    #     json.dump(vars(args), f, indent=4)
-
     print("Training complete!")
     print(f"Validation accuracy: {val_metrics['accuracy']:.4f}")
     print(f"Test accuracy: {test_metrics['accuracy']:.4f}")
 
     weights = model.get_weights()       
-    np.save(args["model_save_path"], weights, allow_pickle=True)
+    args_dict = vars(args)
+    import json
 
-    loaded_weights = np.load(args["model_save_path"], allow_pickle=True)
+    with open("best_config.json", "w") as f:
+        json.dump(args_dict, f, indent=4)
+
+    np.save(args.model_save_path, weights, allow_pickle=True)
+
+    model = NeuralNetwork(args)
+    loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
     model.set_weights(loaded_weights)
 
     loaded_metrics = model.evaluate(X_test, y_test)
@@ -250,7 +256,12 @@ def main():
     # analyze_weights(model, [0, 1, 2])
     # analyze_activations(model, X_test, wandb_run=wandb_run)
 
-    wandb_run.finish()
+    ## to get confusion matrix and log to wandb
+    # fig, cnf_matrix = get_confusion_matrix(y_test, model.forward(X_test))
+
+    # wandb_run.log({"confusion_matrix": wandb.Image(fig)})
+    # print(cnf_matrix)
+    # wandb_run.finish()
 
 if __name__ == "__main__":
     main()

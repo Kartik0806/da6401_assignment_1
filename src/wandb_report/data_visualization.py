@@ -5,7 +5,7 @@ Logs a W&B Table with 5 sample images from each of the 10 Fashion-MNIST classes.
 
 import numpy as np
 import wandb
-from src.utils.data_loader import load_dataset
+from utils.data_loader import load_dataset
 
 CLASS_NAMES = [
     "0",  

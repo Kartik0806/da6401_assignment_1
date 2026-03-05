@@ -4,8 +4,8 @@ Implements: Cross-Entropy, Mean Squared Error (MSE)
 """
 
 import numpy as np
-from src.ann import Module
-from src.ann import Parameter
+from ann import Module
+from ann import Parameter
 
 class MSE(Module):
     def __init__(self):
