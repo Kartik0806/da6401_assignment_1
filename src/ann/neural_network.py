@@ -17,24 +17,44 @@ class NeuralNetwork:
     def __init__(self, args):
 
 
-        self.hidden_sizes = args.hidden_sizes
+        self.hidden_sizes = getattr(args, "hidden_sizes", [128, 128])
         
-        self.activations = args.activation
-        self.loss_type = args.loss
-        self.optimizer_type = args.optimizer
-        self.learning_rate = args.learning_rate
-        self.weight_decay = args.weight_decay
-        self.weight_init = args.weight_init
-        self.input_dim = 784
-        self.num_classes = 10
-        self.layers = []
-        self.build()
+        self.activations = getattr(args, "activation", ["relu", "relu",])
+        self.loss_type = getattr(args, "loss", "cross_entropy")
+        self.optimizer_type = getattr(args, "optimizer", "sgd")
+        self.learning_rate = getattr(args, "learning_rate", 0.01)
+        self.weight_decay = getattr(args, "weight_decay", 0.0)
+        self.weight_init = getattr(args, "weight_init", ["xavier", "xavier"])
+        self.input_dim = getattr(args, "input_dim", 784)
+        self.num_classes = getattr(args, "num_classes", 10)
+        self.hidden_sizes = getattr(args, "hidden_sizes", [128, 128])
 
-    
+        acts = getattr(args, "activation", "relu")
+        inits = getattr(args, "weight_init", "xavier")
+
+
+        # If user passes a single string, expand to the number of hidden layers
+        if isinstance(acts, str):
+            acts = [acts] * len(self.hidden_sizes)
+        if isinstance(inits, str):
+            inits = [inits] * len(self.hidden_sizes)
+
+        # If user passes a shorter list, extend it
+        if len(acts) < len(self.hidden_sizes):
+            acts = acts + [acts[-1]] * (len(self.hidden_sizes) - len(acts))
+        if len(inits) < len(self.hidden_sizes):
+            inits = inits + [inits[-1]] * (len(self.hidden_sizes) - len(inits))
+
+        self.activations = acts
+        self.weight_init = inits
+        self.build()
+        self.first_pass = True
+        # raise ValueError(f"Invalid weight initialization method: {self.weight_init}")
     def build(self):
 
         ## building model
         prev_size = self.input_dim
+        self.layers = []
         for i, (hhz, act) in enumerate(zip(self.hidden_sizes, self.activations)):
             self.layers.append(NeuralLayer(prev_size, hhz, init = self.weight_init[i]))
             self.layers.append(get_activation_fn(act))
@@ -54,6 +74,10 @@ class NeuralNetwork:
         X is shape (b, D_in) and output is shape (b, D_out).
         b is batch size, D_in is input dimension, D_out is output dimension.
         """
+        # if self.first_pass:
+        #     self.first_pass = False
+        #     # self.input_dim = X.shape[1]
+        #     # self.build()
 
         for layer in self.layers:
             X = layer.forward(X)
@@ -71,6 +95,7 @@ class NeuralNetwork:
 
         # Backprop through layers in reverse; collect grads so that index 0 = last layer
         loss = self.loss.forward(y_pred, y_true)
+        self.current_loss = loss
         grad = self.loss.backward()
         # grad_W_list.append(self.layers[-1].grad_w)
         # grad_b_list.append(self.layers[-1].grad_b)
@@ -88,7 +113,7 @@ class NeuralNetwork:
             self.grad_W[i] = gw
             self.grad_b[i] = gb
         
-        return loss, self.grad_W, self.grad_b
+        return self.grad_W, self.grad_b
 
 
         # print("Shape of grad_Ws:", self.grad_W.shape, self.grad_W[1].shape)
@@ -123,13 +148,13 @@ class NeuralNetwork:
                     layer.zero_grad()
                 
                 logits = self.forward(X_batch)
-                loss, grad_W, grad_b = self.backward(y_batch, logits)
+                grad_W, grad_b = self.backward(y_batch, logits)
                 self.update_weights()
                 step += 1
-                running_loss += loss
+                running_loss += self.current_loss
                 
                 if wandb_run is not None:
-                    wandb_run.log({"train/step_loss": loss, "batch_step": step})  
+                    wandb_run.log({"train/step_loss": self.current_loss, "batch_step": step})  
                     wandb_run.log({"train/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
                     wandb_run.log({"train/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
             
@@ -159,21 +184,25 @@ class NeuralNetwork:
 
     def get_weights(self):
         d = {}
-        for i, layer in enumerate(self.layers):
-            if layer.weight is not None and layer.bias is not None:
-                d[f"W{i}"] = layer.weight.value.copy()
-                d[f"b{i}"] = layer.bias.value.copy()
+        layer_idx = 0
+        for layer in self.layers:
+            if isinstance(layer, NeuralLayer):
+                d[f"W{layer_idx}"] = layer.weight.value.copy()
+                d[f"b{layer_idx}"] = layer.bias.value.copy()
+                layer_idx += 1
         return d
 
     def set_weights(self, weight_dict):
-        for i, layer in enumerate(self.layers):
-            if layer.weight is not None and layer.bias is not None:
-                w_key = f"W{i}"
-                b_key = f"b{i}"
+        layer_idx = 0
+        for layer in self.layers:
+            if isinstance(layer, NeuralLayer):
+                w_key = f"W{layer_idx}"
+                b_key = f"b{layer_idx}"
                 if w_key in weight_dict:
                     layer.weight.value = weight_dict[w_key].copy()
                 if b_key in weight_dict:
                     layer.bias.value = weight_dict[b_key].copy()
+                layer_idx += 1
     
     def __repr__(self):
         return "\n".join([str(layer) for layer in self.layers])

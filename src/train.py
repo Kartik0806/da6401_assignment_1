@@ -218,7 +218,8 @@ def main():
     )
 
     val_metrics = model.evaluate(X_val, y_val)
-
+    train_metrics = model.evaluate(X_train, y_train)
+    print("Training metrics:", train_metrics)
     test_metrics = model.evaluate(X_test, y_test)
     print("Validation metrics:", val_metrics)
     print("Test metrics:", test_metrics)
@@ -233,8 +234,8 @@ def main():
             }
         )
     print("Training complete!")
-    print(f"Validation accuracy: {val_metrics['accuracy']:.4f}")
-    print(f"Test accuracy: {test_metrics['accuracy']:.4f}")
+    # print(f"Validation accuracy: {val_metrics['accuracy']:.4f}")
+    # print(f"Test accuracy: {test_metrics['accuracy']:.4f}")
 
     weights = model.get_weights()       
     args_dict = vars(args)
@@ -245,12 +246,12 @@ def main():
 
     np.save(args.model_save_path, weights, allow_pickle=True)
 
-    model = NeuralNetwork(args)
-    loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
-    model.set_weights(loaded_weights)
+    # model = NeuralNetwork(args)
+    # loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
+    # model.set_weights(loaded_weights)
 
-    loaded_metrics = model.evaluate(X_test, y_test)
-    print("Loaded model metrics:", loaded_metrics)
+    # loaded_metrics = model.evaluate(X_test, y_test)
+    # print("Loaded model metrics:", loaded_metrics)
 
     # analyze_gradients(model)
     # analyze_weights(model, [0, 1, 2])

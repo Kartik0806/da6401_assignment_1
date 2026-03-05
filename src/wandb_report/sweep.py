@@ -12,52 +12,47 @@ dotenv.load_dotenv()
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
-# ──────────────────────────────────────────────
-# 1.  Sweep configuration
-# ──────────────────────────────────────────────
+
 SWEEP_CONFIG = {
-    "method": "bayes",          # Bayesian optimisation – more efficient than grid/random
+    "method": "bayes",         
     "metric": {
         "name": "val/accuracy",
         "goal": "maximize",
     },
-    "early_terminate": {        # Stop poor runs early to save compute
+    "early_terminate": {      
         "type": "hyperband",
         "min_iter": 3,
     },
     "parameters": {
-        # ── Optimiser ──────────────────────────
+
         "optimizer_type": {
             "values": ["sgd", "momentum", "nag", "rmsprop", ]
         },
         "learning_rate": {
             "distribution": "log_uniform_values",
-            "min": 1e-4,
+            "min": 1e-3,
             "max": 1e-1,
         },
         "weight_decay": {
             "values": [0.0, 1e-4, 5e-4, 1e-3]
         },
-        # ── Architecture ───────────────────────
         "num_layers": {
             "values": [1, 2, 3, 4]
         },
-        "hidden_size": {        # single broadcast value per run
+        "hidden_size": {        
             "values": [32, 64, 128, 256, 512]
         },
         "activation": {
             "values": ["relu", "sigmoid", "tanh"]
         },
-        # ── Training ───────────────────────────
         "batch_size": {
             "values": [16, 32, 64, 128, 256]
         },
         "epochs": {
-            "value": 10          # fixed – keep wall-clock manageable
+            "value": 10          
         },
-        # ── Init & Loss ────────────────────────
         "weight_init": {
-            "values": ["random", "xavier"]
+            "values": [ "xavier"]
         },
         "loss_type": {
             "values": ["cross_entropy", "mse"]
@@ -65,14 +60,10 @@ SWEEP_CONFIG = {
     },
 }
 
-
-# ──────────────────────────────────────────────
-# 2.  Single-run training function
-# ──────────────────────────────────────────────
 def train():
-    """Called once per sweep agent step."""
-    from src.ann.neural_network import NeuralNetwork
-    from src.utils.data_loader import load_dataset
+
+    from ann.neural_network import NeuralNetwork
+    from utils.data_loader import load_dataset
 
     run = wandb.init()          
     cfg = dict(run.config)
@@ -111,7 +102,7 @@ def train():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset",       type=str, default="fashion_mnist",
+    parser.add_argument("--dataset",       type=str, default="mnist",
                         choices=["mnist", "fashion_mnist"])
     parser.add_argument("--wandb_project", type=str, required=True)
     parser.add_argument("--count",         type=int, default=100,
