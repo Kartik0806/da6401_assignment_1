@@ -7,8 +7,8 @@ from ann.neural_network import NeuralNetwork
 from utils.data_loader import load_dataset
 from utils.analyze_gradients import analyze_gradients, analyze_activations
 from utils.metrics import get_confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
-# import dotenv
-# dotenv.load_dotenv()
+import dotenv
+dotenv.load_dotenv()
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
@@ -199,11 +199,11 @@ def main():
     if WANDB_API_KEY is not None:
         wandb.login(key=WANDB_API_KEY)
 
-    # if args.wandb_project:
-    #     print(args.wandb_project)
-    #     print(args.run_name)
-    #     wandb_run = None
-        # wandb_run = wandb.init(project=args["wandb_project"], config=args, name=args["run_name"])
+    if args.wandb_project:
+        print(args.wandb_project)
+        print(args.run_name)
+        wandb_run = None
+        wandb_run = wandb.init(project=args.wandb_project, config=args, name=args.run_name)
 
     # model = NeuralNetwork(args)
 
@@ -262,7 +262,7 @@ def main():
 
     # wandb_run.log({"confusion_matrix": wandb.Image(fig)})
     # print(cnf_matrix)
-    # wandb_run.finish()
+    wandb_run.finish()
 
 if __name__ == "__main__":
     main()

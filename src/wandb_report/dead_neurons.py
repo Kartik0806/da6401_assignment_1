@@ -1,5 +1,5 @@
 import os
-CMD1 = """python -m src.train \
+CMD1 = """python -m train \
 -d mnist \
 -e 5 \
 -b 64 \
@@ -12,11 +12,11 @@ CMD1 = """python -m src.train \
 -a relu relu \
 -w_i xavier xavier \
 --wandb_project wandb_report \
---model_save_path models/test_model.npy \
+--model_save_path test_model.npy \
 --run_name "Q-5: dead_neurons_relu"
 """
 
-CMD2 = """python -m src.train \
+CMD2 = """python -m train \
 -d mnist \
 -e 5 \
 -b 64 \
@@ -29,7 +29,7 @@ CMD2 = """python -m src.train \
 -a tanh tanh \
 -w_i xavier xavier \
 --wandb_project wandb_report \
---model_save_path models/test_model.npy \
+--model_save_path test_model.npy \
 --run_name "Q-5: dead_neurons_tanh"
 """
 

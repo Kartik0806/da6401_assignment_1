@@ -1,15 +1,15 @@
 python -m train \
 -d mnist \
--e 10 \
+-e 5 \
 -b 128 \
 -l cross_entropy \
 -o rmsprop \
--lr 0.01 \
+-lr 0.001 \
 -wd 0.01 \
--nhl 3 \
--sz 512 256 128 \
--a relu relu relu \
--w_i xavier xavier xavier \
+-nhl 2 \
+-sz 128 64 \
+-a relu relu \
+-w_i zeros zeros \
 -w_p test \
 --model_save_path best_model.npy \
 --run_name sgd

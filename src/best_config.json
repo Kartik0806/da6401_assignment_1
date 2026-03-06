@@ -1,29 +1,26 @@
 {
     "dataset": "mnist",
-    "epochs": 10,
-    "batch_size": 128,
+    "epochs": 1,
+    "batch_size": 64,
     "loss": "cross_entropy",
-    "optimizer": "rmsprop",
-    "learning_rate": 0.01,
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
     "weight_decay": 0.01,
-    "num_layers": 3,
+    "num_layers": 2,
     "hidden_sizes": [
-        512,
-        256,
+        128,
         128
     ],
     "activation": [
         "relu",
-        "relu",
         "relu"
     ],
     "weight_init": [
-        "xavier",
-        "xavier",
-        "xavier"
+        "zeros",
+        "zeros"
     ],
-    "wandb_project": "test",
-    "run_name": "sgd",
+    "wandb_project": "wandb_report",
+    "run_name": "Q-9: zeros_init",
     "model_save_path": "best_model.npy",
     "input_dim": 784,
     "num_classes": 10

@@ -133,6 +133,9 @@ class NeuralNetwork:
             wandb_run.define_metric("train/epoch_loss", step_metric="epoch")
             wandb_run.define_metric("train/*", step_metric="epoch")
             wandb_run.define_metric("val/*", step_metric="epoch")
+            wandb_run.define_metric("weight/*", step_metric="batch_step")
+            wandb_run.define_metric("weight/*", step_metric="batch_step")
+
             print("logging")
 
         step = 0
@@ -140,7 +143,15 @@ class NeuralNetwork:
             running_loss = 0.0
             num_batches = len(X_train) // batch_size
             
-            for i in range(0, len(X_train), batch_size):
+            for i in range(0, len(X_train), batch_size):    
+
+                if wandb_run is not None:
+                    wandb_run.log({"weight/weight_1": self.layers[-1].weight.value.flatten()[0], "batch_step": step})
+                    wandb_run.log({"weight/weight_2": self.layers[-1].weight.value.flatten()[1], "batch_step": step})
+                    wandb_run.log({"weight/weight_3": self.layers[-1].weight.value.flatten()[2], "batch_step": step})
+                    wandb_run.log({"weight/weight_4": self.layers[-1].weight.value.flatten()[3], "batch_step": step})
+                    wandb_run.log({"weight/weight_5": self.layers[-1].weight.value.flatten()[4], "batch_step": step})
+
                 X_batch = X_train[i:i+batch_size]
                 y_batch = y_train[i:i+batch_size]
                 
@@ -155,9 +166,9 @@ class NeuralNetwork:
                 
                 if wandb_run is not None:
                     wandb_run.log({"train/step_loss": self.current_loss, "batch_step": step})  
-                    wandb_run.log({"train/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
-                    wandb_run.log({"train/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
-            
+                    wandb_run.log({"weight/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
+                    wandb_run.log({"weight/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
+        
 
             train_metrics = self.evaluate(X_train, y_train)
             val_metrics = self.evaluate(X_val, y_val)

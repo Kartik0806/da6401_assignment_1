@@ -48,7 +48,7 @@ def analyze_activations(model:NeuralNetwork, X: np.ndarray, wandb_run = None):
     cols = 3
     rows = (n+cols -1) // cols
 
-    fig = plt.figure(figsize=(15, 4 * rows))
+    fig = plt.figure(figsize=(15, 10 * rows))
 
     for i in range(len(activations)):
         ax = fig.add_subplot(rows, cols, i+1)
