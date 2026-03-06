@@ -57,7 +57,7 @@ def precision_score(y_true, logits):
     for i in range(num_classes):
         tp = np.sum((y_true == y_pred) & (y_pred == i))
         fp = np.sum((y_true != y_pred) & (y_pred == i))
-        precision[i] = tp / (tp + fp)
+        precision[i] = tp / (tp + fp) if (tp + fp) > 0 else 0
     
     return np.mean(precision)
 
@@ -73,7 +73,7 @@ def recall_score(y_true, logits):
     for i in range(num_classes):
         tp = np.sum((y_true == y_pred) & (y_true == i))
         fn = np.sum((y_true != y_pred) & (y_true == i))
-        recall[i] = tp / (tp + fn)
+        recall[i] = tp / (tp + fn) if (tp + fn) > 0 else 0
     
     return np.mean(recall)
 
@@ -84,7 +84,7 @@ def f1_score(y_true, logits):
     precision = precision_score(y_true, logits)
     recall = recall_score(y_true, logits)
 
-    f1 = 2 * (precision * recall) / (precision + recall)
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
     return np.mean(f1)
     
     

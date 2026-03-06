@@ -180,13 +180,7 @@ def main():
     args.input_dim = 784
     args.num_classes = 10
     model = NeuralNetwork(args)
-    # print(args)
-    # args.update({"input_dim": 784, "num_classes": 10})
-    # model = NeuralNetwork(args)
-    # print(model)
-    # return
-    
- 
+     
     one_hot = args.loss != "cross_entropy"
 
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(
@@ -196,16 +190,14 @@ def main():
     wandb_run = None 
     import wandb
 
-    if WANDB_API_KEY is not None:
-        wandb.login(key=WANDB_API_KEY)
+    # if WANDB_API_KEY is not None:
+    #     wandb.login(key=WANDB_API_KEY)
 
     if args.wandb_project:
         print(args.wandb_project)
         print(args.run_name)
         wandb_run = None
-        wandb_run = wandb.init(project=args.wandb_project, config=args, name=args.run_name)
-
-    # model = NeuralNetwork(args)
+        # wandb_run = wandb.init(project=args.wandb_project, config=args, name=args.run_name)
 
     history = model.train(
         X_train,
@@ -231,11 +223,12 @@ def main():
                 "val/accuracy": val_metrics["accuracy"],
                 "test/loss": test_metrics["loss"],
                 "test/accuracy": test_metrics["accuracy"],
+                "test/precision": test_metrics["precision"],
+                "test/recall": test_metrics["recall"],
+                "test/f1": test_metrics["f1"],
             }
         )
     print("Training complete!")
-    # print(f"Validation accuracy: {val_metrics['accuracy']:.4f}")
-    # print(f"Test accuracy: {test_metrics['accuracy']:.4f}")
 
     weights = model.get_weights()       
     args_dict = vars(args)
@@ -262,7 +255,7 @@ def main():
 
     # wandb_run.log({"confusion_matrix": wandb.Image(fig)})
     # print(cnf_matrix)
-    wandb_run.finish()
+    # wandb_run.finish()
 
 if __name__ == "__main__":
     main()

@@ -74,11 +74,6 @@ class NeuralNetwork:
         X is shape (b, D_in) and output is shape (b, D_out).
         b is batch size, D_in is input dimension, D_out is output dimension.
         """
-        # if self.first_pass:
-        #     self.first_pass = False
-        #     # self.input_dim = X.shape[1]
-        #     # self.build()
-
         for layer in self.layers:
             X = layer.forward(X)
         return X

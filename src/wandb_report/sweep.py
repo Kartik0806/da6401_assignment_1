@@ -8,6 +8,7 @@ import os
 import argparse
 import wandb
 import dotenv
+from wandb import wandb_run
 dotenv.load_dotenv()
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
@@ -16,7 +17,7 @@ WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 SWEEP_CONFIG = {
     "method": "bayes",         
     "metric": {
-        "name": "val/accuracy",
+        "name": "test/f1",
         "goal": "maximize",
     },
     "early_terminate": {      
@@ -40,7 +41,7 @@ SWEEP_CONFIG = {
             "values": [1, 2, 3, 4]
         },
         "hidden_size": {        
-            "values": [32, 64, 128, 256, 512]
+            "values": [ [128], [128, 64], [128, 64, 32], [128, 64, 32, 16] ]
         },
         "activation": {
             "values": ["relu", "sigmoid", "tanh"]
@@ -49,7 +50,7 @@ SWEEP_CONFIG = {
             "values": [16, 32, 64, 128, 256]
         },
         "epochs": {
-            "value": 10          
+            "value": 1
         },
         "weight_init": {
             "values": [ "xavier"]
@@ -69,7 +70,7 @@ def train():
     cfg = dict(run.config)
 
     n = cfg["num_layers"]
-    cfg["hidden_sizes"]  = [cfg.pop("hidden_size")] * n
+    # cfg["hidden_sizes"]  = [cfg.pop("hidden_size")] * n
     cfg["activations"]   = [cfg.pop("activation")]  * n
     cfg["weight_init"]   = [cfg.pop("weight_init")] * n
     cfg.update({"input_dim": 784, "num_classes": 10, "dataset": DATASET})
@@ -92,19 +93,25 @@ def train():
     val_metrics  = model.evaluate(X_val,   y_val)
     test_metrics = model.evaluate(X_test, y_test)
 
-    run.log({
-        "val/loss":      val_metrics["loss"],
-        "val/accuracy":  val_metrics["accuracy"],
-        "test/loss":     test_metrics["loss"],
-        "test/accuracy": test_metrics["accuracy"],
-    })
+    if run is not None:
+        run.log(
+            {
+                "val/loss": val_metrics["loss"],
+                "val/accuracy": val_metrics["accuracy"],
+                "test/loss": test_metrics["loss"],
+                "test/accuracy": test_metrics["accuracy"],
+                "test/precision": test_metrics["precision"],
+                "test/recall": test_metrics["recall"],
+                "test/f1": test_metrics["f1"],
+            }
+        )
     run.finish()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset",       type=str, default="mnist",
                         choices=["mnist", "fashion_mnist"])
-    parser.add_argument("--wandb_project", type=str, required=True)
+    parser.add_argument("--wandb_project", type=str, default="sweep_test_")
     parser.add_argument("--count",         type=int, default=100,
                         help="Total number of sweep runs (default: 100)")
     args = parser.parse_args()

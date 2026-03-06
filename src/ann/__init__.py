@@ -1,6 +1,7 @@
 # ANN Module - Neural Network Implementation
 
 import numpy as np
+from .neural_network import NeuralNetwork
 
 class Parameter:
     def __init__(self, value):

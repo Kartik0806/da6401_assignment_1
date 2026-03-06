@@ -5,12 +5,14 @@ Implements: SGD, Momentum, Adam, Nadam, etc.
 import numpy as np
 from ann import Parameter
 # from src.ann.neural_network import NeuralNetwork
+
 ## Access each layer's parameters and grads using get_params() and update them
 class SGD:
     
     def __init__(self, model, lr: float):
         self.model = model
         self.lr = lr
+        self.weight_decay = getattr(model, "weight_decay", 0.0)
     
     def step(self):
         for layer in self.model.layers:
@@ -18,7 +20,10 @@ class SGD:
                 params = layer.get_params()
                 for name, param in params.items():
                     # print(name, param.value.shape, param.grad.shape)
-                    param.value -= self.lr * param.grad
+                    if name == "weight":
+                        param.value -= self.lr * (param.grad + self.weight_decay * param.value)
+                    else:       
+                        param.value -= self.lr * param.grad
 
 import numpy as np
 
@@ -29,6 +34,7 @@ class Momentum:
         self.lr = lr
         self.momentum = momentum
         self.velocity = {}
+        self.weight_decay = getattr(model, "weight_decay", 0.0)
     
     def step(self):
         for layer in self.model.layers:
@@ -39,7 +45,10 @@ class Momentum:
                     if key not in self.velocity:
                         self.velocity[key] = np.zeros_like(param.value)
                     self.velocity[key] = self.momentum * self.velocity[key] - self.lr * param.grad
-                    param.value += self.velocity[key]
+                    if name == "weight":
+                        param.value += self.velocity[key] - self.lr * self.weight_decay * param.value
+                    else:       
+                        param.value += self.velocity[key]
 
 
 class NAG:
@@ -49,6 +58,7 @@ class NAG:
         self.lr = lr
         self.momentum = momentum
         self.velocity = {}
+        self.weight_decay = getattr(model, "weight_decay", 0.0)
     
     def step(self):
         for layer in self.model.layers:
@@ -60,7 +70,11 @@ class NAG:
                         self.velocity[key] = np.zeros_like(param.value)
                     v_prev = self.velocity[key].copy()
                     self.velocity[key] = self.momentum * self.velocity[key] - self.lr * param.grad
-                    param.value += -self.momentum * v_prev + (1 + self.momentum) * self.velocity[key]
+
+                    if name == "weight":
+                        param.value += -self.momentum * v_prev + (1 + self.momentum) * self.velocity[key] - self.lr * self.weight_decay * param.value
+                    else:               
+                        param.value += -self.momentum * v_prev + (1 + self.momentum) * self.velocity[key]
 
 
 class RMSprop:
@@ -71,6 +85,7 @@ class RMSprop:
         self.beta = beta
         self.eps = eps
         self.cache = {}
+        self.weight_decay = getattr(model, "weight_decay", 0.0)
     
     def step(self):
         for layer in self.model.layers:
@@ -81,7 +96,10 @@ class RMSprop:
                     if key not in self.cache:
                         self.cache[key] = np.zeros_like(param.value)
                     self.cache[key] = self.beta * self.cache[key] + (1 - self.beta) * (param.grad ** 2)
-                    param.value -= self.lr * param.grad / (np.sqrt(self.cache[key]) + self.eps)
+                    if name == "weight":
+                        param.value -= self.lr * param.grad / (np.sqrt(self.cache[key]) + self.eps) + self.lr * self.weight_decay * param.value
+                    else:
+                        param.value -= self.lr * param.grad / (np.sqrt(self.cache[key]) + self.eps)
 
 optims = {
     "sgd": SGD,
