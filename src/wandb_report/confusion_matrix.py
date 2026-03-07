@@ -13,7 +13,8 @@ python -m train \
 -w_i xavier xavier \
 --wandb_project wandb_report \
 --model_save_path test_model.npy \
---run_name "Q-7: confusion_matrix"
+--run_name "Q-7: confusion_matrix" \
+--analyze_confusion_matrix True
 """
 import os
 os.system(CMD)

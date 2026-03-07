@@ -10,7 +10,7 @@ from utils.metrics import get_confusion_matrix, accuracy_score, precision_score,
 # import dotenv
 # dotenv.load_dotenv()
 
-# WANDB_API_KEY = os.getenv("WANDB_API_KEY")
+WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
 def parse_arguments():
     """
@@ -141,32 +141,33 @@ def parse_arguments():
         default="model.npy",
         help="Relative path to save trained model weights (.npy)",
     )
-
-
+    parser.add_argument(
+        "--analyze_gradients",
+        default=False,
+        help="Whether to analyze gradients after training",
+    )
+    parser.add_argument(
+        "--analyze_activations",
+        default=False,
+        help="Whether to analyze activations after training",
+    )
+    parser.add_argument(
+        "--analyze_weights",
+        default=False,
+        help="Whether to analyze weights after training",
+    )
+    parser.add_argument(
+        "--analyze_confusion_matrix",
+        default=False,
+        help="Whether to analyze confusion matrix after training",
+    )
     args = parser.parse_args()
 
 
-    # if len(args.hidden_size) != args.num_layers: 
+    if len(args.hidden_sizes) != args.num_layers: 
 
-    #     raise ValueError("Length of --hidden_size must equal --num_layers")
-
-    # if len(args.activation) == 1: 
-    #     args.activation = args.activation * args.num_layers
-    # elif len(args.activation) != args.num_layers: 
-    #     raise ValueError( 
-    #         f"--activation must be 1 value (broadcast) or {args.num_layers} values "
-    #         f"(one per hidden layer), got {len(args.activation)}"
-    #     ) 
-
-    # if len(args.weight_init) == 1:
-    #     args.weight_init = args.weight_init * args.num_layers
-
-    # elif len(args.weight_init) != args.num_layers:
-    #     raise ValueError(
-    #         f"--weight_init must be 1 value (broadcast) or {args.num_layers} values "
-    #         f"(one per hidden layer), got {len(args.weight_init)}"
-    #     )
-
+        raise ValueError("Length of --hidden_size must equal --num_layers")
+    
     return args
 
 
@@ -188,14 +189,14 @@ def main():
     wandb_run = None 
     import wandb
 
-    # if WANDB_API_KEY is not None:
-    #     wandb.login(key=WANDB_API_KEY)
+    if WANDB_API_KEY is not None:
+        wandb.login(key=WANDB_API_KEY)
 
     if args.wandb_project:
         print(args.wandb_project)
         print(args.run_name)
         wandb_run = None
-        # wandb_run = wandb.init(project=args.wandb_project, config=args, name=args.run_name)
+        wandb_run = wandb.init(project=args.wandb_project, config=args, name=args.run_name)
 
     history = model.train(
         X_train,
@@ -217,13 +218,12 @@ def main():
     if wandb_run is not None:
         wandb_run.log(
             {
-                "val/loss": val_metrics["loss"],
-                "val/accuracy": val_metrics["accuracy"],
-                "test/loss": test_metrics["loss"],
-                "test/accuracy": test_metrics["accuracy"],
-                "test/precision": test_metrics["precision"],
-                "test/recall": test_metrics["recall"],
-                "test/f1": test_metrics["f1"],
+                "test/accuracy_": test_metrics["accuracy"],
+                "test/f1_": test_metrics["f1"],
+                "train/accuracy_": train_metrics["accuracy"],
+                "train/f1_": train_metrics["f1"],
+                "val/accuracy_": val_metrics["accuracy"],
+                "val/f1_": val_metrics["f1"],
             }
         )
     print("Training complete!")
@@ -232,28 +232,35 @@ def main():
     args_dict = vars(args)
     import json
 
-    with open("best_config.json", "w") as f:
-        json.dump(args_dict, f, indent=4)
+    if args.dataset == "mnist":
+        with open("best_config.json", "w") as f:
+            json.dump(args_dict, f, indent=4)
+        np.save(args.model_save_path, weights, allow_pickle=True)
+    else:
+        with open("f_mnist_config.json", "w") as f:
+            json.dump(args_dict, f, indent=4)
+    
+    model = NeuralNetwork(args)
+    loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
+    model.set_weights(loaded_weights)
 
-    np.save(args.model_save_path, weights, allow_pickle=True)
+    loaded_metrics = model.evaluate(X_test, y_test)
+    print("Loaded model metrics:", loaded_metrics)
 
-    # model = NeuralNetwork(args)
-    # loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
-    # model.set_weights(loaded_weights)
+    if args.analyze_gradients:
+        analyze_gradients(model, wandb_run=wandb_run)
 
-    # loaded_metrics = model.evaluate(X_test, y_test)
-    # print("Loaded model metrics:", loaded_metrics)
-
-    # analyze_gradients(model)
-    # analyze_weights(model, [0, 1, 2])
-    # analyze_activations(model, X_test, wandb_run=wandb_run)
+    if args.analyze_activations:
+        analyze_activations(model, X_test, wandb_run=wandb_run)
 
     ## to get confusion matrix and log to wandb
-    # fig, cnf_matrix = get_confusion_matrix(y_test, model.forward(X_test))
-
-    # wandb_run.log({"confusion_matrix": wandb.Image(fig)})
-    # print(cnf_matrix)
-    # wandb_run.finish()
+    if args.analyze_confusion_matrix and wandb_run is not None:
+        fig, cnf_matrix = get_confusion_matrix(y_test, model.forward(X_test))
+        wandb_run.log({"confusion_matrix": wandb.Image(fig)})
+        print(cnf_matrix)
+    
+    if wandb_run is not None:
+        wandb_run.finish()
 
 if __name__ == "__main__":
     main()

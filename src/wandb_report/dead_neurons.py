@@ -13,7 +13,8 @@ CMD1 = """python -m train \
 -w_i xavier xavier \
 --wandb_project wandb_report \
 --model_save_path test_model.npy \
---run_name "Q-5: dead_neurons_relu"
+--run_name "Q-5: dead_neurons_relu" \
+--analyze_activations True
 """
 
 CMD2 = """python -m train \
@@ -30,7 +31,8 @@ CMD2 = """python -m train \
 -w_i xavier xavier \
 --wandb_project wandb_report \
 --model_save_path test_model.npy \
---run_name "Q-5: dead_neurons_tanh"
+--run_name "Q-5: dead_neurons_tanh" \
+--analyze_activations True
 """
 
 os.system(CMD1)

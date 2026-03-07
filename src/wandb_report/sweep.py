@@ -7,14 +7,10 @@ Run with: python sweep.py --dataset fashion_mnist --wandb_project <your-project>
 import os
 import argparse
 import wandb
-import dotenv
 from wandb import wandb_run
 from types import SimpleNamespace
 
-dotenv.load_dotenv()
-
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
-
 
 SWEEP_CONFIG = {
     "method": "bayes",         
@@ -92,19 +88,22 @@ def train():
         wandb_run=run,
     )
 
-    val_metrics  = model.evaluate(X_val,   y_val)
+    val_metrics = model.evaluate(X_val, y_val)
+    train_metrics = model.evaluate(X_train, y_train)
+    print("Training metrics:", train_metrics)
     test_metrics = model.evaluate(X_test, y_test)
+    print("Validation metrics:", val_metrics)
+    print("Test metrics:", test_metrics)
 
-    if run is not None:
-        run.log(
+    if wandb_run is not None:
+        wandb_run.log(
             {
-                "val/loss": val_metrics["loss"],
-                "val/accuracy": val_metrics["accuracy"],
-                "test/loss": test_metrics["loss"],
-                "test/accuracy": test_metrics["accuracy"],
-                "test/precision": test_metrics["precision"],
-                "test/recall": test_metrics["recall"],
-                "test/f1": test_metrics["f1"],
+                "test/accuracy_": test_metrics["accuracy"],
+                "test/f1_": test_metrics["f1"],
+                "train/accuracy_": train_metrics["accuracy"],
+                "train/f1_": train_metrics["f1"],
+                "val/accuracy_": val_metrics["accuracy"],
+                "val/f1_": val_metrics["f1"],
             }
         )
     run.finish()
@@ -123,10 +122,11 @@ if __name__ == "__main__":
 
     wandb.login(key=WANDB_API_KEY)
 
-    sweep_id = wandb.sweep(
-        sweep=SWEEP_CONFIG,
-        project=args.wandb_project,
-    )
+    # sweep_id = wandb.sweep(
+    #     sweep=SWEEP_CONFIG,
+    #     project=args.wandb_project,
+    # )
+    sweep_id = "5xhqwz90"
     print(f"Sweep created: {sweep_id}")
     print(f"Launching agent for {args.count} runs …") 
     wandb.agent(sweep_id, function=train, count=args.count)

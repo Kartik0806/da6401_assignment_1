@@ -12,10 +12,10 @@ def analyze_gradients(model:NeuralNetwork, wandb_run = None):
     for i in range(len(grad_W)):
         plt.hist(grad_W[i][0].flatten(),)
         plt.title(f"Gradient distribution for layer {i}")
-        plt.show()
+        # plt.show()
         plt.hist(grad_b[i][0].flatten(),)
         plt.title(f"Gradient distribution for layer {i}")
-        plt.show()
+        # plt.show()
 
 def analyze_weights(model:NeuralNetwork, layer_ids:list[int], wandb_run = None):
 
@@ -24,11 +24,11 @@ def analyze_weights(model:NeuralNetwork, layer_ids:list[int], wandb_run = None):
         if layer.weight is not None:
             plt.hist(layer.weight.value.flatten(), bins=50)
             plt.title(f"Weight distribution for layer {layer_id}")
-            plt.show()
+            # plt.show()
         if layer.bias is not None:
             plt.hist(layer.bias.value.flatten(), bins=50)
             plt.title(f"Bias distribution for layer {layer_id}")
-            plt.show()
+            # plt.show()
 
 def analyze_activations(model:NeuralNetwork, X: np.ndarray, wandb_run = None):
 
@@ -58,7 +58,7 @@ def analyze_activations(model:NeuralNetwork, X: np.ndarray, wandb_run = None):
     if wandb_run is not None:
         wandb_run.log({"activations": wandb.Image(fig)})
     
-    plt.tight_layout()
+    # plt.tight_layout()
 
-    plt.show()
+    # plt.show()
     

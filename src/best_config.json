@@ -1,21 +1,25 @@
 {
     "dataset": "mnist",
-    "epochs": 5,
-    "batch_size": 64,
-    "loss": "mean_squared_error",
+    "epochs": 15,
+    "batch_size": 128,
+    "loss": "cross_entropy",
     "optimizer": "rmsprop",
-    "learning_rate": 0.01,
-    "weight_decay": 0.1,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
     "num_layers": 2,
     "hidden_sizes": [
-        256,
-        128
+        128,
+        64
     ],
-    "activation": "relu",
-    "weight_init": "xavier",
-    "wandb_project": "test",
-    "run_name": "sgd",
+    "activation": "tanh",
+    "weight_init": "random",
+    "wandb_project": "hyperparameter_tuning",
+    "run_name": "Hyperparameter Tuning: relu2",
     "model_save_path": "best_model.npy",
+    "analyze_gradients": false,
+    "analyze_activations": false,
+    "analyze_weights": false,
+    "analyze_confusion_matrix": false,
     "input_dim": 784,
     "num_classes": 10
 }

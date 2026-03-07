@@ -95,9 +95,10 @@ class RMSprop:
                     key = id(param)
                     if key not in self.cache:
                         self.cache[key] = np.zeros_like(param.value)
-                    self.cache[key] = self.beta * self.cache[key] + (1 - self.beta) * (param.grad ** 2)
+                    grad_with_decay = param.grad + self.weight_decay * param.value
+                    self.cache[key] = self.beta * self.cache[key] + (1 - self.beta) * (grad_with_decay ** 2)
                     if name == "weight":
-                        param.value -= self.lr * param.grad / (np.sqrt(self.cache[key]) + self.eps) + self.lr * self.weight_decay * param.value
+                        param.value -= self.lr * grad_with_decay / (np.sqrt(self.cache[key]) + self.eps)
                     else:
                         param.value -= self.lr * param.grad / (np.sqrt(self.cache[key]) + self.eps)
 

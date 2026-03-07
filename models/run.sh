@@ -1,0 +1,15 @@
+python -m train \
+-d mnist \
+-e 5 \
+-b 256 \
+-l cross_entropy \
+-o momentum \
+-lr 0.025 \
+-wd 0.01 \
+-nhl 2 \
+-sz 128 128 \
+-a relu \
+-w_i xavier \
+--model_save_path best_model.npy \
+--run_name "Hyperparameter Tuning: relu2" \
+--wandb_project hyperparameter_tuning \

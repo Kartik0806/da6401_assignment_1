@@ -1,15 +1,15 @@
 python -m train \
 -d mnist \
--e 5 \
--b 64 \
--l mean_squared_error \
+-e 15 \
+-b 128 \
+-l cross_entropy \
 -o rmsprop \
--lr 0.01 \
--wd 0.1 \
+-lr 0.001 \
+-wd 0 \
 -nhl 2 \
--sz 256 128 \
--a relu \
--w_i xavier \
--w_p test \
+-sz 128 64 \
+-a tanh \
+-w_i random \
 --model_save_path best_model.npy \
---run_name sgd
+--run_name "Hyperparameter Tuning: relu2" \
+--wandb_project hyperparameter_tuning \

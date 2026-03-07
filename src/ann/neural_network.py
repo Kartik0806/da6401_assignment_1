@@ -15,8 +15,7 @@ class NeuralNetwork:
     """
 
     def __init__(self, args):
-
-
+        self.args = args
         self.hidden_sizes = getattr(args, "hidden_sizes", [128, 128])
         
         self.activation = getattr(args, "activation", "relu")
@@ -121,7 +120,7 @@ class NeuralNetwork:
             
             for i in range(0, len(X_train), batch_size):    
 
-                if wandb_run is not None:
+                if wandb_run is not None and self.args.analyze_weights:
                     wandb_run.log({"weight/weight_1": self.layers[-1].weight.value.flatten()[0], "batch_step": step})
                     wandb_run.log({"weight/weight_2": self.layers[-1].weight.value.flatten()[1], "batch_step": step})
                     wandb_run.log({"weight/weight_3": self.layers[-1].weight.value.flatten()[2], "batch_step": step})
@@ -142,8 +141,10 @@ class NeuralNetwork:
                 
                 if wandb_run is not None:
                     wandb_run.log({"train/step_loss": self.current_loss, "batch_step": step})  
-                    wandb_run.log({"weight/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
-                    wandb_run.log({"weight/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
+
+                    if self.args.analyze_gradients:
+                        wandb_run.log({"weight/grad_W": np.linalg.norm(grad_W[-1]), "batch_step": step})
+                        wandb_run.log({"weight/grad_b": np.linalg.norm(grad_b[-1]), "batch_step": step})
         
 
             train_metrics = self.evaluate(X_train, y_train)
