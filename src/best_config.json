@@ -2,7 +2,7 @@
     "dataset": "mnist",
     "epochs": 5,
     "batch_size": 64,
-    "loss": "mse",
+    "loss": "mean_squared_error",
     "optimizer": "rmsprop",
     "learning_rate": 0.01,
     "weight_decay": 0.1,
@@ -11,14 +11,8 @@
         256,
         128
     ],
-    "activation": [
-        "relu",
-        "relu"
-    ],
-    "weight_init": [
-        "xavier",
-        "xavier"
-    ],
+    "activation": "relu",
+    "weight_init": "xavier",
     "wandb_project": "test",
     "run_name": "sgd",
     "model_save_path": "best_model.npy",

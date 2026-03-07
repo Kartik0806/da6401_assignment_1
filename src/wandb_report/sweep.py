@@ -9,6 +9,8 @@ import argparse
 import wandb
 import dotenv
 from wandb import wandb_run
+from types import SimpleNamespace
+
 dotenv.load_dotenv()
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
@@ -26,7 +28,7 @@ SWEEP_CONFIG = {
     },
     "parameters": {
 
-        "optimizer_type": {
+        "optimizer": {
             "values": ["sgd", "momentum", "nag", "rmsprop", ]
         },
         "learning_rate": {
@@ -35,27 +37,27 @@ SWEEP_CONFIG = {
             "max": 1e-1,
         },
         "weight_decay": {
-            "values": [0.0, 1e-4, 5e-4, 1e-3]
+            "values": [0.0, 0.1, 1e-4, 5e-4, 1e-3]
         },
         "num_layers": {
             "values": [1, 2, 3, 4]
         },
-        "hidden_size": {        
-            "values": [ [128], [128, 64], [128, 64, 32], [128, 64, 32, 16] ]
+        "hidden_sizes": {        
+            "values": [ 256, 128, 64 ]
         },
-        "activation": {
+        "activations": {
             "values": ["relu", "sigmoid", "tanh"]
         },
         "batch_size": {
-            "values": [16, 32, 64, 128, 256]
+            "values": [32, 64, 128, 256]
         },
         "epochs": {
-            "value": 1
+            "values": [5, 10]
         },
         "weight_init": {
             "values": [ "xavier"]
         },
-        "loss_type": {
+        "loss": {
             "values": ["cross_entropy", "mse"]
         },
     },
@@ -70,21 +72,21 @@ def train():
     cfg = dict(run.config)
 
     n = cfg["num_layers"]
-    # cfg["hidden_sizes"]  = [cfg.pop("hidden_size")] * n
-    cfg["activations"]   = [cfg.pop("activation")]  * n
+    cfg["hidden_sizes"]  = [cfg.pop("hidden_sizes")] * n
+    cfg["activations"]   = [cfg.pop("activations")]  * n
     cfg["weight_init"]   = [cfg.pop("weight_init")] * n
     cfg.update({"input_dim": 784, "num_classes": 10, "dataset": DATASET})
 
-    one_hot = cfg["loss_type"] != "cross_entropy"
+    one_hot = cfg["loss"] != "cross_entropy"
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(
-        DATASET, one_hot_labels=False
+        DATASET, one_hot_labels=one_hot
     )
-
+    cfg = SimpleNamespace(**cfg)
     model = NeuralNetwork(cfg)
     model.train(
         X_train, y_train,
-        epochs=cfg["epochs"],
-        batch_size=cfg["batch_size"],
+        epochs=cfg.epochs,
+        batch_size=cfg.batch_size,
         X_val=X_val,
         y_val=y_val,
         wandb_run=run,

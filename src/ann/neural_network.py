@@ -19,45 +19,27 @@ class NeuralNetwork:
 
         self.hidden_sizes = getattr(args, "hidden_sizes", [128, 128])
         
-        self.activations = getattr(args, "activation", ["relu", "relu",])
+        self.activation = getattr(args, "activation", "relu")
         self.loss_type = getattr(args, "loss", "cross_entropy")
         self.optimizer_type = getattr(args, "optimizer", "sgd")
         self.learning_rate = getattr(args, "learning_rate", 0.01)
         self.weight_decay = getattr(args, "weight_decay", 0.0)
-        self.weight_init = getattr(args, "weight_init", ["xavier", "xavier"])
+        self.weight_init = getattr(args, "weight_init", "xavier")
         self.input_dim = getattr(args, "input_dim", 784)
         self.num_classes = getattr(args, "num_classes", 10)
         self.hidden_sizes = getattr(args, "hidden_sizes", [128, 128])
 
-        acts = getattr(args, "activation", "relu")
-        inits = getattr(args, "weight_init", "xavier")
-
-
-        # If user passes a single string, expand to the number of hidden layers
-        if isinstance(acts, str):
-            acts = [acts] * len(self.hidden_sizes)
-        if isinstance(inits, str):
-            inits = [inits] * len(self.hidden_sizes)
-
-        # If user passes a shorter list, extend it
-        if len(acts) < len(self.hidden_sizes):
-            acts = acts + [acts[-1]] * (len(self.hidden_sizes) - len(acts))
-        if len(inits) < len(self.hidden_sizes):
-            inits = inits + [inits[-1]] * (len(self.hidden_sizes) - len(inits))
-
-        self.activations = acts
-        self.weight_init = inits
         self.build()
         self.first_pass = True
-        # raise ValueError(f"Invalid weight initialization method: {self.weight_init}")
+    
     def build(self):
 
         ## building model
         prev_size = self.input_dim
         self.layers = []
-        for i, (hhz, act) in enumerate(zip(self.hidden_sizes, self.activations)):
-            self.layers.append(NeuralLayer(prev_size, hhz, init = self.weight_init[i]))
-            self.layers.append(get_activation_fn(act))
+        for i, hhz in enumerate(self.hidden_sizes):
+            self.layers.append(NeuralLayer(prev_size, hhz, init = self.weight_init))
+            self.layers.append(get_activation_fn(self.activation))
             prev_size = hhz
         self.layers.append(NeuralLayer(prev_size, self.num_classes))
 
@@ -92,14 +74,13 @@ class NeuralNetwork:
         loss = self.loss.forward(y_pred, y_true)
         self.current_loss = loss
         grad = self.loss.backward()
-        # grad_W_list.append(self.layers[-1].grad_w)
-        # grad_b_list.append(self.layers[-1].grad_b)
         
         for layer in self.layers[::-1]:
             grad = layer.backward(grad)
             if isinstance(layer, NeuralLayer):
                 grad_W_list.append(layer.grad_w)
                 grad_b_list.append(layer.grad_b)
+
         # create explicit object arrays to avoid numpy trying to broadcast shapes
 
         self.grad_W = np.empty(len(grad_W_list), dtype=object)

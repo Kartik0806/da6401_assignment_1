@@ -56,7 +56,7 @@ class CrossEntropy(Module):
         return "CrossEntropy()"
 
 losses = {
-    "mse": MSE,
+    "mean_squared_error": MSE,
     "cross_entropy": CrossEntropy
 }
 def get_loss(loss_type: str):

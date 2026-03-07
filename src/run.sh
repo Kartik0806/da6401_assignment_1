@@ -2,14 +2,14 @@ python -m train \
 -d mnist \
 -e 5 \
 -b 64 \
--l mse \
+-l mean_squared_error \
 -o rmsprop \
 -lr 0.01 \
 -wd 0.1 \
 -nhl 2 \
 -sz 256 128 \
--a relu relu \
--w_i xavier xavier \
+-a relu \
+-w_i xavier \
 -w_p test \
 --model_save_path best_model.npy \
 --run_name sgd

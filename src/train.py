@@ -7,10 +7,10 @@ from ann.neural_network import NeuralNetwork
 from utils.data_loader import load_dataset
 from utils.analyze_gradients import analyze_gradients, analyze_activations
 from utils.metrics import get_confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
-import dotenv
-dotenv.load_dotenv()
+# import dotenv
+# dotenv.load_dotenv()
 
-WANDB_API_KEY = os.getenv("WANDB_API_KEY")
+# WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
 def parse_arguments():
     """
@@ -54,7 +54,7 @@ def parse_arguments():
         "-l",
         "--loss",
         type=str,
-        choices=["cross_entropy", "mean_squared_error", "mse"],
+        choices=["cross_entropy", "mean_squared_error"],
         default="cross_entropy",
         help="Loss function",
     )
@@ -101,10 +101,9 @@ def parse_arguments():
     parser.add_argument(
         "-a",
         "--activation",
-        nargs="+",
         type=str,
         choices=["relu", "sigmoid", "tanh"],
-        default=["relu"],
+        default="relu",
         help=(
             "Activation function(s) for hidden layers. "
             "Pass one value to broadcast to all layers, "
@@ -114,10 +113,9 @@ def parse_arguments():
     parser.add_argument(
         "-w_i",
         "--weight_init",
-        nargs="+",
         type=str,
         choices=["random", "xavier", "zeros"],
-        default=["xavier"],
+        default="xavier",
         help=(
             "Weight initialization method(s) for hidden layers. "
             "Pass one value to broadcast to all layers, "

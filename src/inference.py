@@ -25,113 +25,22 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(description='Run inference on test set')
 
+    parser.add_argument("--model_path", type=str, default="best_model.npy", help="Relative path to load trained model weights (.npy)")
+    parser.add_argument("-d", "--dataset", type=str, choices=["mnist", "fashion_mnist"], default="mnist")
+    parser.add_argument("-b", "--batch_size", type=int, default=64)
+    parser.add_argument("-nhl", "--num_layers", type=int,  default=2)
+    parser.add_argument("-sz", "--hidden_size", type=int,  default=128)
     parser.add_argument(
-        "-d",
-        "--dataset",
-        type=str,
-        choices=["mnist", "fashion_mnist"],
-        required=False,
-        help="Dataset to use",
-        default="mnist"
-    )
-    parser.add_argument(
-        "-e", "--epochs", type=int, required=False, help="Number of training epochs", default=10
-    )
-    parser.add_argument(
-        "-b", "--batch_size", type=int, required=False, help="Mini-batch size", default=64
-    )
-    parser.add_argument(
-        "-l",
-        "--loss",
-        type=str,
-        choices=["cross_entropy", "mean_squared_error", "mse"],
-        default="cross_entropy",
-        help="Loss function",
-    )
-    parser.add_argument(
-        "-o",
-        "--optimizer",
-        type=str,
-        choices=["sgd", "momentum", "nag", "rmsprop", "adam", "nadam"],
-        default="sgd",
-        help="Optimizer type",
-    )
-    parser.add_argument(
-        "-lr",
-        "--learning_rate",
-        type=float,
-        required=False,
-        help="Learning rate for optimizer",
-        default=0.1
-    )
-    parser.add_argument(
-        "-wd",
-        "--weight_decay",
-        type=float,
-        default=0.1,
-        help="Weight decay for L2 regularization",
-    )
-    parser.add_argument(
-        "-nhl",
-        "--num_layers",
-        type=int,
-        required=False,
-        help="Number of hidden layers",
-        default=2
-    )
-    parser.add_argument(
-        "-sz",
-        "--hidden_sizes",
-        nargs="+",
-        type=int,                       
-        required=False,
-        help="Number of neurons in each hidden layer (one value per layer)",
-        default=[128, 128]
-    )
-    parser.add_argument(
-        "-a",
-        "--activation",
-        nargs="+",
+        "-a", "--activation",
         type=str,
         choices=["relu", "sigmoid", "tanh"],
-        default=["relu", "relu"],
-        help=(
-            "Activation function(s) for hidden layers. "
-            "Pass one value to broadcast to all layers, "
-            "or one per hidden layer e.g. -a relu sigmoid tanh"
-        ),
+        default="relu"
     )
     parser.add_argument(
-        "-w_i",
-        "--weight_init",
-        nargs="+",
+        "-w_i", "--weight_init",
         type=str,
         choices=["random", "xavier", "zeros"],
-        default=["xavier", "xavier"],
-        help=(
-            "Weight initialization method(s) for hidden layers. "
-            "Pass one value to broadcast to all layers, "
-            "or one per hidden layer e.g. -w_i xavier random xavier"
-        ),
-    )
-    parser.add_argument(
-        "--wandb_project",
-        type=str,
-        default=None,
-        help="Weights & Biases project name",
-
-    )
-    parser.add_argument(
-        "--run_name",
-        type=str,
-        default=None,
-        help="Run name for W&B",
-    )
-    parser.add_argument(
-        "--model_save_path",
-        type=str,
-        default="best_model.npy",
-        help="Relative path to save trained model weights (.npy)",
+        default="xavier"
     )
 
     return parser.parse_args()
@@ -158,6 +67,13 @@ def evaluate_model(model, X_test, y_test):
     precision = precision_score(y_test, logits)
     recall = recall_score(y_test, logits)
     f1 = f1_score(y_test, logits)
+
+    y_test = np.argmax(y_test, axis=1) if y_test.ndim > 1 else y_test
+
+    acc = metrics.accuracy_score(y_test, np.argmax(logits, axis=1))
+    precision = metrics.precision_score(y_test, np.argmax(logits, axis=1), average='weighted')
+    recall = metrics.recall_score(y_test, np.argmax(logits, axis=1), average='weighted')
+    f1 = metrics.f1_score(y_test, np.argmax(logits, axis=1), average='weighted')
     return {"loss": loss, "accuracy": acc, "precision": precision, "recall": recall, "f1": f1}
 
 
@@ -167,18 +83,24 @@ def main():
 
     TODO: Must return Dictionary - logits, loss, accuracy, f1, precision, recall
     """
-    args = parse_arguments()
-    _, _, _, _, X_test, y_test = load_dataset(args.dataset)
+    import json
+    with open("best_config.json", "r") as f:
+        best_config = json.load(f)
     
-    # global model
+    args = argparse.Namespace(**best_config)
+
+    one_hot = args.loss != "cross_entropy"
+
+    _, _, _, _, X_test, y_test = load_dataset(
+        args.dataset, one_hot_labels=one_hot
+    ) 
     model = NeuralNetwork(args)
-    weights = load_model(args.model_save_path)
+    weights = load_model(args.model_save_path)   
     model.set_weights(weights)
-    metrics = evaluate_model(model, X_test, y_test)
+    result = evaluate_model(model, X_test, y_test)
     print("Evaluation complete!")
-    print(metrics)
-    # print(weights)
-    return metrics
+    print(result)
+    return result
 
 if __name__ == '__main__':
     main()

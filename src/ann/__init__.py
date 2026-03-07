@@ -1,7 +1,6 @@
 # ANN Module - Neural Network Implementation
 
 import numpy as np
-from .neural_network import NeuralNetwork
 
 class Parameter:
     def __init__(self, value):
@@ -39,3 +38,5 @@ class Module:
             return
         self.weight.grad = np.zeros_like(self.weight.value)
         self.bias.grad = np.zeros_like(self.bias.value)
+
+from ann.neural_network import NeuralNetwork
