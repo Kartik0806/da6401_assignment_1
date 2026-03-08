@@ -3,14 +3,14 @@ import os
 CMD1 = """python -m train \
 -d fashion_mnist \
 -e 10 \
--b 256 \
+-b 128 \
 -l cross_entropy \
--o rmsprop \
--lr 0.0025 \
--wd 0.001 \
+-o nag \
+-lr 0.0337 \
+-wd 0.0005 \
 -nhl 4 \
--sz 256 128 128 64 \
--a relu  \
+-sz 256 256 256 256 \
+-a tanh  \
 -w_i xavier \
 --wandb_project wandb_report \
 --model_save_path f_mnist_model.npy \

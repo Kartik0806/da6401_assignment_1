@@ -236,16 +236,13 @@ def main():
         with open("best_config.json", "w") as f:
             json.dump(args_dict, f, indent=4)
         np.save(args.model_save_path, weights, allow_pickle=True)
-    else:
-        with open("f_mnist_config.json", "w") as f:
-            json.dump(args_dict, f, indent=4)
     
-    model = NeuralNetwork(args)
-    loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
-    model.set_weights(loaded_weights)
+        model = NeuralNetwork(args)
+        loaded_weights = np.load(args.model_save_path, allow_pickle=True).item()
+        model.set_weights(loaded_weights)
 
-    loaded_metrics = model.evaluate(X_test, y_test)
-    print("Loaded model metrics:", loaded_metrics)
+        loaded_metrics = model.evaluate(X_test, y_test)
+        print("Loaded model metrics:", loaded_metrics)
 
     if args.analyze_gradients:
         analyze_gradients(model, wandb_run=wandb_run)

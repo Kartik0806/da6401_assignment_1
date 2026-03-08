@@ -13,7 +13,7 @@ class NeuralLayer(Module):
     def __init__(self, in_features: int, out_features: int, init: str = "xavier"):
         super().__init__()
         
-        if init in "xavier" :
+        if init == "xavier" :
             self.weight = Parameter(np.random.randn(in_features, out_features) * np.sqrt(2.0 / in_features))
         elif init == "zeros":
             self.weight = Parameter(np.zeros((in_features, out_features)))

@@ -1,18 +1,18 @@
 {
     "dataset": "mnist",
-    "epochs": 15,
-    "batch_size": 128,
+    "epochs": 5,
+    "batch_size": 256,
     "loss": "cross_entropy",
-    "optimizer": "rmsprop",
-    "learning_rate": 0.001,
-    "weight_decay": 0.0,
+    "optimizer": "momentum",
+    "learning_rate": 0.025,
+    "weight_decay": 0.01,
     "num_layers": 2,
     "hidden_sizes": [
         128,
-        64
+        128
     ],
-    "activation": "tanh",
-    "weight_init": "random",
+    "activation": "relu",
+    "weight_init": "xavier",
     "wandb_project": "hyperparameter_tuning",
     "run_name": "Hyperparameter Tuning: relu2",
     "model_save_path": "best_model.npy",

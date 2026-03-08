@@ -61,19 +61,21 @@ def evaluate_model(model, X_test, y_test):
         
     TODO: Return Dictionary - logits, loss, accuracy, f1, precision, recall
     """
+    if np.max(X_test) > 1.0:
+        X_test = X_test.astype(np.float64) / 255.0
+    
     logits = model.forward(X_test)
     loss = model.loss.forward(logits, y_test)
     acc = accuracy_score(y_test, logits)
     precision = precision_score(y_test, logits)
     recall = recall_score(y_test, logits)
-    f1 = f1_score(y_test, logits)
+    # f1 = f1_score(y_test, logits)
+    f1 = metrics.f1_score(y_pred=np.argmax(logits, axis=1), y_true=y_test, average='micro')
 
-    y_test = np.argmax(y_test, axis=1) if y_test.ndim > 1 else y_test
-
-    acc = metrics.accuracy_score(y_test, np.argmax(logits, axis=1))
-    precision = metrics.precision_score(y_test, np.argmax(logits, axis=1), average='weighted')
-    recall = metrics.recall_score(y_test, np.argmax(logits, axis=1), average='weighted')
-    f1 = metrics.f1_score(y_test, np.argmax(logits, axis=1), average='weighted')
+    # acc = metrics.accuracy_score(y_test, np.argmax(logits, axis=1))
+    # precision = metrics.precision_score(y_test, np.argmax(logits, axis=1), average='weighted')
+    # recall = metrics.recall_score(y_test, np.argmax(logits, axis=1), average='weighted')
+    # f1 = metrics.f1_score(y_test, np.argmax(logits, axis=1), average='weighted')
     return {"loss": loss, "accuracy": acc, "precision": precision, "recall": recall, "f1": f1}
 
 
@@ -94,6 +96,7 @@ def main():
     _, _, _, _, X_test, y_test = load_dataset(
         args.dataset, one_hot_labels=one_hot
     ) 
+    
     model = NeuralNetwork(args)
     weights = load_model(args.model_save_path)   
     model.set_weights(weights)

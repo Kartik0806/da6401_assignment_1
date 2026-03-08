@@ -80,12 +80,10 @@ def recall_score(y_true, logits):
 def f1_score(y_true, logits):
     if y_true.ndim == 2:
         y_true = np.argmax(y_true, axis=1)
-
-    precision = precision_score(y_true, logits)
-    recall = recall_score(y_true, logits)
-
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    return np.mean(f1)
+        
+    p = precision_score(y_true, logits)
+    r = recall_score(y_true, logits)
+    return (2 * p * r / (p + r)) if (p + r) > 0 else 0.0
     
     
     

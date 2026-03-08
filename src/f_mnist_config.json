@@ -1,0 +1,27 @@
+{
+    "dataset": "fashion_mnist",
+    "epochs": 10,
+    "batch_size": 128,
+    "loss": "cross_entropy",
+    "optimizer": "nag",
+    "learning_rate": 0.0337,
+    "weight_decay": 0.0005,
+    "num_layers": 4,
+    "hidden_sizes": [
+        256,
+        256,
+        256,
+        256
+    ],
+    "activation": "tanh",
+    "weight_init": "xavier",
+    "wandb_project": "wandb_report",
+    "run_name": "Q-10 - Fashion MNIST default",
+    "model_save_path": "f_mnist_model.npy",
+    "analyze_gradients": false,
+    "analyze_activations": false,
+    "analyze_weights": false,
+    "analyze_confusion_matrix": false,
+    "input_dim": 784,
+    "num_classes": 10
+}

@@ -1,13 +1,6 @@
-"""
-Hyperparameter Sweep using W&B
-Performs a Bayesian sweep with 100+ runs over key hyperparameters.
-Run with: python sweep.py --dataset fashion_mnist --wandb_project <your-project>
-"""
-
 import os
 import argparse
 import wandb
-from wandb import wandb_run
 from types import SimpleNamespace
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
@@ -18,10 +11,7 @@ SWEEP_CONFIG = {
         "name": "test/f1",
         "goal": "maximize",
     },
-    "early_terminate": {      
-        "type": "hyperband",
-        "min_iter": 3,
-    },
+
     "parameters": {
 
         "optimizer": {
@@ -29,7 +19,7 @@ SWEEP_CONFIG = {
         },
         "learning_rate": {
             "distribution": "log_uniform_values",
-            "min": 1e-3,
+            "min": 1e-4,
             "max": 1e-1,
         },
         "weight_decay": {
@@ -38,23 +28,23 @@ SWEEP_CONFIG = {
         "num_layers": {
             "values": [1, 2, 3, 4]
         },
-        "hidden_sizes": {        
-            "values": [ 256, 128, 64 ]
+        "hidden_size": {        
+            "values": [ 256, 128, 64, 32 ]
         },
-        "activations": {
+        "activation": {
             "values": ["relu", "sigmoid", "tanh"]
         },
         "batch_size": {
-            "values": [32, 64, 128, 256]
+            "values": [64, 128, 256]
         },
         "epochs": {
-            "values": [5, 10]
+            "values": [15, 10]
         },
         "weight_init": {
             "values": [ "xavier"]
         },
         "loss": {
-            "values": ["cross_entropy", "mse"]
+            "values": ["cross_entropy", "mean_squared_error"]
         },
     },
 }
@@ -68,15 +58,18 @@ def train():
     cfg = dict(run.config)
 
     n = cfg["num_layers"]
-    cfg["hidden_sizes"]  = [cfg.pop("hidden_sizes")] * n
-    cfg["activations"]   = [cfg.pop("activations")]  * n
-    cfg["weight_init"]   = [cfg.pop("weight_init")] * n
+    cfg["hidden_sizes"]  = [cfg["hidden_size"]] * n
+
     cfg.update({"input_dim": 784, "num_classes": 10, "dataset": DATASET})
 
     one_hot = cfg["loss"] != "cross_entropy"
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(
         DATASET, one_hot_labels=one_hot
     )
+    cfg["analyze_gradients"] = False
+    cfg["analyze_activations"] = False
+    cfg["analyze_weights"] = False
+    cfg["analyze_confusion_matrix"] = False
     cfg = SimpleNamespace(**cfg)
     model = NeuralNetwork(cfg)
     model.train(
@@ -95,15 +88,15 @@ def train():
     print("Validation metrics:", val_metrics)
     print("Test metrics:", test_metrics)
 
-    if wandb_run is not None:
-        wandb_run.log(
+    if run is not None:
+        run.log(
             {
-                "test/accuracy_": test_metrics["accuracy"],
-                "test/f1_": test_metrics["f1"],
-                "train/accuracy_": train_metrics["accuracy"],
-                "train/f1_": train_metrics["f1"],
-                "val/accuracy_": val_metrics["accuracy"],
-                "val/f1_": val_metrics["f1"],
+                "test/accuracy": test_metrics["accuracy"],
+                "test/f1": test_metrics["f1"],
+                "train/accuracy": train_metrics["accuracy"],
+                "train/f1": train_metrics["f1"],
+                "val/accuracy": val_metrics["accuracy"],
+                "val/f1": val_metrics["f1"],
             }
         )
     run.finish()
@@ -113,8 +106,28 @@ if __name__ == "__main__":
     parser.add_argument("--dataset",       type=str, default="mnist",
                         choices=["mnist", "fashion_mnist"])
     parser.add_argument("--wandb_project", type=str, default="sweep_test_")
-    parser.add_argument("--count",         type=int, default=100,
-                        help="Total number of sweep runs (default: 100)")
+    parser.add_argument("--count",         type=int, default=300,
+                        help="Total number of sweep runs (default: 300)")
+    parser.add_argument(
+        "--analyze_gradients",
+        default=False,
+        help="Whether to analyze gradients after training",
+    )
+    parser.add_argument(
+        "--analyze_activations",
+        default=False,
+        help="Whether to analyze activations after training",
+    )
+    parser.add_argument(
+        "--analyze_weights",
+        default=False,
+        help="Whether to analyze weights after training",
+    )
+    parser.add_argument(
+        "--analyze_confusion_matrix",
+        default=False,
+        help="Whether to analyze confusion matrix after training",
+    )
     args = parser.parse_args()
 
     global DATASET
@@ -122,11 +135,10 @@ if __name__ == "__main__":
 
     wandb.login(key=WANDB_API_KEY)
 
-    # sweep_id = wandb.sweep(
-    #     sweep=SWEEP_CONFIG,
-    #     project=args.wandb_project,
-    # )
-    sweep_id = "5xhqwz90"
+    sweep_id = wandb.sweep(
+        sweep=SWEEP_CONFIG,
+        project=args.wandb_project,
+    )
     print(f"Sweep created: {sweep_id}")
     print(f"Launching agent for {args.count} runs …") 
     wandb.agent(sweep_id, function=train, count=args.count)
